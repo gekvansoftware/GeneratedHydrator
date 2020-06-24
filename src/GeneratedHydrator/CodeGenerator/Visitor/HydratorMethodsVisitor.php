@@ -154,7 +154,7 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
     {
         $method->params = [
             new Param(new Node\Expr\Variable('data'), null, 'array'),
-            new Param(new Node\Expr\Variable('object')),
+            new Param(new Node\Expr\Variable('object'), null, 'object'),
         ];
 
         $bodyParts = [];
