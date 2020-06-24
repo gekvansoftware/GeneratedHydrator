@@ -68,7 +68,7 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
 
         $this->replaceConstructor($this->findOrCreateMethod($node, '__construct'));
         $this->replaceHydrate($this->findOrCreateMethod($node, 'hydrate'));
-        $this->replaceExtract($this->findOrCreateMethod($node, 'extract'));
+        $this->replaceExtract($this->findOrCreateMethod($node, 'extract', 'array'));
 
         return $node;
     }
@@ -175,7 +175,7 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
 
     private function replaceExtract(ClassMethod $method) : void
     {
-        $method->params = [new Param(new Node\Expr\Variable('object'))];
+        $method->params = [new Param(new Node\Expr\Variable('object'), null, 'object')];
 
         $bodyParts   = [];
         $bodyParts[] = '$ret = array();';
@@ -200,7 +200,7 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
      *
      * @deprecated not needed if we move away from code replacement
      */
-    private function findOrCreateMethod(Class_ $class, string $name) : ClassMethod
+    private function findOrCreateMethod(Class_ $class, string $name, ?string $returnType = null) : ClassMethod
     {
         $foundMethods = array_filter(
             $class->getMethods(),
@@ -212,7 +212,9 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
         $method = reset($foundMethods);
 
         if (! $method) {
-            $class->stmts[] = $method = new ClassMethod($name);
+            $class->stmts[] = $method = new ClassMethod($name, [
+                'returnType' => $returnType
+            ]);
         }
 
         return $method;
