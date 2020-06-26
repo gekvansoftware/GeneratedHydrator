@@ -112,7 +112,7 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
 
         return [
             'if (isset(' . $inputArrayName . '[' . $escapedName . '])',
-            '    || $object->' . $propertyName . ' !== null && \\array_key_exists(' . $escapedName . ', ' . $inputArrayName . ')',
+            '    || isset($object->' . $propertyName . ') && \\array_key_exists(' . $escapedName . ', ' . $inputArrayName . ')',
             ') {',
             '    $object->' . $propertyName . ' = ' . $inputArrayName . '[' . $escapedName . '];',
             '}',
