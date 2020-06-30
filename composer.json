@@ -36,7 +36,7 @@
         "zendframework/zend-stdlib":          "^3.2.1"
     },
     "suggest": {
-        "doctrine/annotations": "Needed to support the \"MappedFrom\" annotation."
+        "doctrine/annotations": "Needed to support the 'MappedFrom' annotation."
     },
     "autoload": {
         "psr-4": {
