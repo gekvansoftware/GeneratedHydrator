@@ -35,6 +35,9 @@
         "zendframework/zend-servicemanager":  "^3.4.0",
         "zendframework/zend-stdlib":          "^3.2.1"
     },
+    "suggest": {
+        "doctrine/annotations": "Needed to support the \"MappedFrom\" annotation."
+    },
     "autoload": {
         "psr-4": {
             "GeneratedHydrator\\": "src/GeneratedHydrator"
@@ -50,4 +53,4 @@
     "config": {
         "sort-packages": true
     }
-}
+},
