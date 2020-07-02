@@ -105,18 +105,39 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
     {
         $propertyName = $property->name;
         $escapedName  = var_export($property->mappedFrom, true);
+        $factory = $property->factory;
 
-        if ($property->allowsNull && ! $property->hasDefault) {
+        if ($property->allowsNull && ! $property->hasDefault && $factory === null) {
             return ['$object->' . $propertyName . ' = ' . $inputArrayName . '[' . $escapedName . '] ?? null;'];
         }
 
-        return [
+        if ($property->allowsNull && ! $property->hasDefault && $factory !== null) {
+            return [
+                '    if (isset(' . $inputArrayName . '[' .$escapedName . '])) {',
+                '        $f = new \\' . $factory . '();',
+                '        $object->' . $propertyName . ' = $f(' . $inputArrayName . '[' . $escapedName . ']);',
+                '    } else {',
+                '        $object->' . $propertyName . ' = null;',
+                '    }'
+            ];
+        }
+
+        $result = [
             'if (isset(' . $inputArrayName . '[' . $escapedName . '])',
-            '    || isset($object->' . $propertyName . ') && \\array_key_exists(' . $escapedName . ', ' . $inputArrayName . ')',
-            ') {',
-            '    $object->' . $propertyName . ' = ' . $inputArrayName . '[' . $escapedName . '];',
-            '}',
+            '    || $object->' . $propertyName . ' !== null && \\array_key_exists(' . $escapedName . ', ' . $inputArrayName . ')',
+            ') {'
         ];
+
+        if ($factory === null) {
+            $result[] = '    $object->' . $propertyName . ' = ' . $inputArrayName . '[' . $escapedName . '];';
+        } else {
+            $result[] = '    $f = new \\' . $factory . '();';
+            $result[] = '    $object->' . $propertyName . ' = $f(' . $inputArrayName . '[' . $escapedName . ']);';
+        }
+
+        $result[] = '}';
+
+        return $result;
     }
 
     private function replaceConstructor(ClassMethod $method) : void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeneratedHydrator\CodeGenerator\Visitor;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use GeneratedHydrator\Factory;
 use GeneratedHydrator\MappedFrom;
 use ReflectionProperty;
 use function array_key_exists;
@@ -21,16 +22,25 @@ final class ObjectProperty
     public bool $allowsNull;
     /** @psalm-var non-empty-string */
     public string $name;
-    public ?string $mappedFrom;
+    public string $mappedFrom;
+    public ?string $factory;
 
-    /** @psalm-param non-empty-string $name */
-    private function __construct(string $name, bool $hasType, bool $allowsNull, bool $hasDefault, string $mappedFrom)
+    /** @psalm-param non-empty-string $name
+     * @param string $name
+     * @param bool $hasType
+     * @param bool $allowsNull
+     * @param bool $hasDefault
+     * @param string $mappedFrom
+     * @param string|null $factory
+     */
+    private function __construct(string $name, bool $hasType, bool $allowsNull, bool $hasDefault, string $mappedFrom, ?string $factory)
     {
         $this->name       = $name;
         $this->hasType    = $hasType;
         $this->allowsNull = $allowsNull;
         $this->hasDefault = $hasDefault;
         $this->mappedFrom = $mappedFrom;
+        $this->factory    = $factory;
     }
 
     public static function fromReflection(ReflectionProperty $property) : self
@@ -40,15 +50,23 @@ final class ObjectProperty
         $type          = $property->getType();
         $defaultValues = $property->getDeclaringClass()->getDefaultProperties();
         $mappedFrom    = $propertyName;
+        $factory       = null;
 
         if (class_exists(AnnotationReader::class) === true) {
             $reader = new AnnotationReader();
-            $annotation = $reader->getPropertyAnnotation($property, MappedFrom::class);
-            $mappedFrom = $annotation->name ?? $propertyName;
+            $mappedFromAnnotation = $reader->getPropertyAnnotation($property, MappedFrom::class);
+            $factoryAnnotation = $reader->getPropertyAnnotation($property, Factory::class);
+            $mappedFrom = $mappedFromAnnotation->name ?? $propertyName;
+
+            if ($factoryAnnotation !== null && !class_exists($factoryAnnotation->name)) {
+                throw new \Exception('The class name you provided is not valid.');
+            }
+
+            $factory = $factoryAnnotation->name ?? $factoryAnnotation;
         }
 
         if ($type === null) {
-            return new self($propertyName, false, true, array_key_exists($propertyName, $defaultValues), $mappedFrom);
+            return new self($propertyName, false, true, array_key_exists($propertyName, $defaultValues), $mappedFrom, $factory);
         }
 
         return new self(
@@ -56,7 +74,8 @@ final class ObjectProperty
             true,
             $type->allowsNull(),
             array_key_exists($propertyName, $defaultValues),
-            $mappedFrom
+            $mappedFrom,
+            $factory
         );
     }
 }
