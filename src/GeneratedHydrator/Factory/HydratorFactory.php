@@ -7,9 +7,9 @@ namespace GeneratedHydrator\Factory;
 use CodeGenerationUtils\Exception\InvalidGeneratedClassesDirectoryException;
 use CodeGenerationUtils\Visitor\ClassRenamerVisitor;
 use GeneratedHydrator\Configuration;
+use Laminas\Hydrator\HydratorInterface;
 use PhpParser\NodeTraverser;
 use ReflectionClass;
-use Zend\Hydrator\HydratorInterface;
 use function class_exists;
 
 /**

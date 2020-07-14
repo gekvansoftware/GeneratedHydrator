@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace GeneratedHydrator\CodeGenerator\Visitor;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use GeneratedHydrator\Factory;
+use GeneratedHydrator\NestedHydrator;
 use GeneratedHydrator\MappedFrom;
 use ReflectionProperty;
 use function array_key_exists;
+use function class_exists;
 
 /**
  * @internal
@@ -24,6 +25,7 @@ final class ObjectProperty
     public string $name;
     public string $mappedFrom;
     public ?string $factory;
+    public ?string $target;
 
     /** @psalm-param non-empty-string $name
      * @param string $name
@@ -33,7 +35,7 @@ final class ObjectProperty
      * @param string $mappedFrom
      * @param string|null $factory
      */
-    private function __construct(string $name, bool $hasType, bool $allowsNull, bool $hasDefault, string $mappedFrom, ?string $factory)
+    private function __construct(string $name, bool $hasType, bool $allowsNull, bool $hasDefault, string $mappedFrom, ?string $factory, ?string $target)
     {
         $this->name       = $name;
         $this->hasType    = $hasType;
@@ -41,6 +43,7 @@ final class ObjectProperty
         $this->hasDefault = $hasDefault;
         $this->mappedFrom = $mappedFrom;
         $this->factory    = $factory;
+        $this->target     = $target;
     }
 
     public static function fromReflection(ReflectionProperty $property) : self
@@ -55,18 +58,21 @@ final class ObjectProperty
         if (class_exists(AnnotationReader::class) === true) {
             $reader = new AnnotationReader();
             $mappedFromAnnotation = $reader->getPropertyAnnotation($property, MappedFrom::class);
-            $factoryAnnotation = $reader->getPropertyAnnotation($property, Factory::class);
+            $factoryAnnotation = $reader->getPropertyAnnotation($property, NestedHydrator::class);
             $mappedFrom = $mappedFromAnnotation->name ?? $propertyName;
 
-            if ($factoryAnnotation !== null && !class_exists($factoryAnnotation->name)) {
+            if ($factoryAnnotation !== null
+                && (!class_exists($factoryAnnotation->abstractFactory ?? '') || !class_exists($factoryAnnotation->target ?? ''))
+            ) {
                 throw new \Exception('The class name you provided is not valid.');
             }
 
-            $factory = $factoryAnnotation->name ?? $factoryAnnotation;
+            $factory = $factoryAnnotation->abstractFactory ?? $factoryAnnotation;
+            $target = $factoryAnnotation->target ?? $factoryAnnotation;
         }
 
         if ($type === null) {
-            return new self($propertyName, false, true, array_key_exists($propertyName, $defaultValues), $mappedFrom, $factory);
+            return new self($propertyName, false, true, array_key_exists($propertyName, $defaultValues), $mappedFrom, $factory, $target);
         }
 
         return new self(
@@ -75,7 +81,8 @@ final class ObjectProperty
             $type->allowsNull(),
             array_key_exists($propertyName, $defaultValues),
             $mappedFrom,
-            $factory
+            $factory,
+            $target
         );
     }
 }

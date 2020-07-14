@@ -106,16 +106,18 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
         $propertyName = $property->name;
         $escapedName  = var_export($property->mappedFrom, true);
         $factory = $property->factory;
+        $target = $property->target;
 
         if ($property->allowsNull && ! $property->hasDefault && $factory === null) {
             return ['$object->' . $propertyName . ' = ' . $inputArrayName . '[' . $escapedName . '] ?? null;'];
         }
 
-        if ($property->allowsNull && ! $property->hasDefault && $factory !== null) {
+        if ($property->allowsNull && ! $property->hasDefault && $factory !== null && $target !== null) {
             return [
                 '    if (isset(' . $inputArrayName . '[' .$escapedName . '])) {',
                 '        $f = new \\' . $factory . '();',
-                '        $object->' . $propertyName . ' = $f(' . $inputArrayName . '[' . $escapedName . ']);',
+                '        $f = $f->create(\\' . $target . '::class);',
+                '        $object->' . $propertyName . ' = $f->hydrate(' . $inputArrayName . '[' . $escapedName . '], new \\' . $target . '());',
                 '    } else {',
                 '        $object->' . $propertyName . ' = null;',
                 '    }'

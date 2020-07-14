@@ -6,17 +6,17 @@ namespace GeneratedHydrator\ClassGenerator;
 
 use CodeGenerationUtils\Visitor\ClassImplementorVisitor;
 use GeneratedHydrator\CodeGenerator\Visitor\HydratorMethodsVisitor;
+use Laminas\Hydrator\HydratorInterface;
 use PhpParser\Node;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeTraverser;
 use ReflectionClass;
-use Zend\Hydrator\HydratorInterface;
 use function explode;
 
 /**
- * Generator for highly performing {@see \Zend\Hydrator\HydratorInterface}
+ * Generator for highly performing {@see \Laminas\Hydrator\HydratorInterface}
  * for objects
  *
  * {@inheritDoc}
