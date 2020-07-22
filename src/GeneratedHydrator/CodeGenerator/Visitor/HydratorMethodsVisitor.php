@@ -134,7 +134,8 @@ class HydratorMethodsVisitor extends NodeVisitorAbstract
             $result[] = '    $object->' . $propertyName . ' = ' . $inputArrayName . '[' . $escapedName . '];';
         } else {
             $result[] = '    $f = new \\' . $factory . '();';
-            $result[] = '    $object->' . $propertyName . ' = $f(' . $inputArrayName . '[' . $escapedName . ']);';
+            $result[] = '    $f = $f->create(\\' . $target . '::class);';
+            $result[] = '    $object->' . $propertyName . ' = $f->hydrate(' . $inputArrayName . '[' . $escapedName . '], new \\' . $target . '());';
         }
 
         $result[] = '}';
